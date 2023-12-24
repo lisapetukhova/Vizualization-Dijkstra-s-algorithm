@@ -1,11 +1,16 @@
+
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <iostream>
 #include <string>
 #include <queue>
 #include <limits>
+#include <windows.h>
 using namespace sf;
 using namespace std;
+
+
+
 #define radius 20
 
 Color whiteColor = Color(255, 255, 255, 200);
@@ -130,6 +135,10 @@ private:
 
 int main() {
 
+    bool startedAlgorithm = false;
+    bool outputTextInfinity = false;
+    bool startFlag = false;
+    bool startEndFlag = false;
     bool selected5Menu = false; // Выбрано ли "Создание графа". Для выводв 
     bool selectedStartAlgorithm = false;
     bool selectedEndAlgorithm = false;
@@ -205,6 +214,9 @@ int main() {
         return 1;
     }
 
+    Text textINF("INFINITY", font, 40);
+    textINF.setPosition(860, 310);
+
     Text weightEdge("", font, 40);
     weightEdge.setFillColor(Color::White);
 
@@ -226,7 +238,7 @@ int main() {
     Text menu4(L" Выход. ", font, 40);
     menu4.setPosition(1150, 670);
 
-    Text menu5(L"Введите вес ребра _ ", font, 40);
+    Text menu5(L"Введите вес ребра... ", font, 40);
     menu5.setPosition(860, 160);
 
     Text textHelp1(L"1) Нажмите на левую кнопку мыши, чтобы создать вершину. ", font, 30);
@@ -245,13 +257,18 @@ int main() {
     Text endVertex(L"Конечная вершина: ", font, 40);
     endVertex.setPosition(860, 260);
 
-    Text startNum("", font, 40);
-    startNum.setFillColor(sf::Color::White);
-    startNum.setPosition(1000, 210);
+    Text start;
+    start.setFont(font);
+    start.setCharacterSize(40);
+    start.setFillColor(Color::White);
+    start.setPosition(1200, 210);
 
-    Text endNum("", font, 40);
-    endNum.setFillColor(Color::White);
-    endNum.setPosition(950, 260);
+    Text end;
+    end.setFont(font);
+    end.setCharacterSize(40);
+    end.setFillColor(Color::White);
+    end.setPosition(1200, 260);
+
 
     // Создание графа.
     Graph graph;
@@ -300,9 +317,11 @@ int main() {
                 }
 
                 if (selectedStartAlgorithm == false) {
+                    
+
                     if (event.key.code == Keyboard::Enter)
                     {
-
+                        Vector2i mousePos = Mouse::getPosition(window);
                         if (enteredNumberBool) {
                             enteredNumber = stoi(enteredNumberString);
                             enteredNumberString = " ";
@@ -328,7 +347,33 @@ int main() {
                             }
                             previousTexts.push_back(previousText);
                         }
+                        else if (startFlag)
+                        {
+                            if (enteredStart == NULL) {
+                                
+                                enteredStart = stoi(enteredNumberString);
+                                enteredNumberString = " ";
+                                startEndFlag = true;
+
+                                start.setString(to_string(enteredStart));
+
+                            }
+                            else
+                            {
+                                enteredEnd = stoi(enteredNumberString);
+                                enteredNumberString = " ";
+
+                                end.setString(to_string(enteredEnd));
+
+
+                            }
+                        }
+                        else if (startedAlgorithm) {
+
+                        }
+
                     }
+
                 }
             }
 
@@ -468,182 +513,124 @@ int main() {
                     }
                     else if (menu3.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
 
-                        // CountVertex - количество вершин.
-                        selectedStartAlgorithm = true;
+                        startFlag = true;
 
-                        if (event.type == Event::TextEntered) 
-                        {
-                            if (event.text.unicode < 128) 
-                            {
-                                char inputChar = static_cast<char>(event.text.unicode);
-                                if (inputChar >= '0' && inputChar <= '9')
-                                {
-                                    enteredStartString += inputChar;
-                                    startNum.setString(enteredStartString);
-                                }
-                            }
-                                                        
-                        }
-
-                        if (event.type == Event::KeyPressed)
-                        {
-                            if (event.key.code == Keyboard::Enter)
-                            {
-                                enteredStart = stoi(enteredStartString);
-                                enteredStartString = " ";
-                            }
-                        }
-
-                        int FirstVertex = enteredStart - 1;
-
-                        if (enteredStart != 0) {
-                            selectedEndAlgorithm = true;
-                        }
-
-                        if (selectedEndAlgorithm) {
-
-                            if (event.type == Event::TextEntered)
-                            {
-                                if (event.text.unicode < 128)
-                                {
-                                    char inputChar = static_cast<char>(event.text.unicode);
-                                    if (inputChar >= '0' && inputChar <= '9')
-                                    {
-                                        enteredEndString += inputChar;
-                                        startNum.setString(enteredEndString);
-                                    }
-                                }
-
-                            }
-
-                            if (event.type == Event::KeyPressed)
-                            {
-                                if (event.key.code == Keyboard::Enter)
-                                {
-                                    enteredEnd = stoi(enteredEndString);
-                                    enteredEndString = " ";
-                                }
-                            }
-                        }
-
-                        int LastVertex = enteredEnd - 1;
-
-                        int Infinity = numeric_limits<int>::max(); // Т.к. расстояние до других вершин неизвестно, приравниваем к бесконечности.
-
-                        // Наш заданный граф с помощью матрицы смежностей:
-                        //graph.arrVertex[matrX][matrY];
-                        //graph.arrVertex[matrY][matrX];
-
-                        if (matrX == matrY) {
-                            graph.arrVertex[matrX][matrY] = 0;
-                            graph.arrVertex[matrY][matrX] = 0;
-                        }
-
-                        if (matrX != matrY and (graph.arrVertex[matrX][matrY] < 1) and (graph.arrVertex[matrY][matrX] < 1)) {
-                            graph.arrVertex[matrX][matrY] = Infinity;
-                            graph.arrVertex[matrY][matrX] = Infinity;
-                        }
-
-                        // Массив с весом между вершинами:
-                        vector <int> lenght(CountVertex, Infinity);
-
-                        // Очередь с приоритетом для вершин:
-                        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> QueueVertex;
-
-                        // Начало алгоритма. Начинаем с первой вершины.
-                        lenght[FirstVertex] = 0; // Начало (исходящий узел графа) равен 0 (т.к. это расстояние вершины до самой себя).
-                        QueueVertex.push({ 0, FirstVertex }); // Вставляем в приоритетную очередь начальную вершину.
-
-
-                        // Массив для отслежования посещённых вершин
-                        vector<bool> visited(CountVertex, false);
-                        visited[FirstVertex] = true; // Помечаем начальную вершину как посещённую.
-
-                        // Массив для хранения предыдущей вершины.
-                        vector<int> previous(CountVertex, -1);
-
-                        // Шаги повторяем до тех пор, пока на графе есть непосещенные точки.
-                        while (!QueueVertex.empty()) {
-                            int distance = -QueueVertex.top().first;
-                            int vertex = QueueVertex.top().second; // Следующая вершина.
-                            QueueVertex.pop();
-
-                            // Если рассматриваемая длина больше той, что уже хранится, то идём дальше.
-                            if (distance > lenght[vertex]) {
-                                continue;
-                            }
-
-                            // Перебираем все вершины.
-                            for (int v = 0; v < CountVertex; v++) {
-                                int dist = graph.arrVertex[vertex][v];
-                                if (dist != Infinity) {
-                                    if (lenght[v] > lenght[vertex] + dist) {
-                                        lenght[v] = lenght[vertex] + dist;
-                                        QueueVertex.push({ -lenght[v], v });
-                                        visited[v] = true; // Помечаем вершину как посещённую.
-                                        previous[v] = vertex; // Запоминаем предыдущую вершину.
-                                    }
-
-                                }
-                            }
-                        }
-
-                        // В случае несвязанных вершин, вес пути до вершины приравниваем к бесконечности.
-                        if (lenght[LastVertex] == Infinity) {
-
-                            pathVertex = true;
-                            Text textINF("INFINITY", font, 50);
-                            textINF.setPosition(860, 320);
-                            /* В случае несвязанных вершин выводится строчка "INFINITY", 
-                            чтобы это отследить надо ввести флажок. */
-                        }
-                        else if (lenght[LastVertex != Infinity]) {  // Вывод кратчайшего пути:
-                            pathVertex = true;
-                            // Вывод кратчайшего пути:
-                            if (previous[LastVertex] != -1 || FirstVertex == LastVertex) {
-                                // Если вершина посещена и мы дошли до конца, то:
-                                vector<int> path; // Вектор, для хранения вершин кратчайшего пути.
-                                for (int vertex = LastVertex; vertex != -1; vertex = previous[vertex]) {
-                                    path.push_back(vertex);
-                                }
-                                // Переворачиваем, так как рассматривался путь от конечной до исходной вершины.
-                                reverse(path.begin(), path.end());
-
-                                // Выводим кратчайший путь:
-                                string str = "\nКратчайший путь: [";
-                                for (int i = 0; i < path.size(); i++) {
-                                    str += to_string(path[i] + 1);
-                                    if (i != path.size() - 1) {
-                                        str += "] -> [";
-                                    }
-                                }
-                                str += "]: " + to_string(lenght[LastVertex]);
-
-                                Text text(str, font, 50);
-                                text.setFillColor(Color::Black);
-                                text.setPosition(10, 700); // Позиция текста смещается на 30 пикселей вниз от предыдущего текста
-                                //window.draw(text);
-                            }
-                        }
-                        else { // Иначе по каким-то причинам мы не дошли до конца. Сообщение об отсутсвии пути.
-                            Text text("\nПути не существует", font, 20);
-                            text.setPosition(10, 10 + (CountVertex * 30)); // Позиция текста смещается на 30 пикселей вниз от предыдущего текста
-                            //window.draw(text);
-                        }
-                      
-
-                    }
-                               
-                        else if (menu4.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                    }             
+                    else if (menu4.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
 
                             return 1;
 
-                        }
                     }
                 }
-
             }
 
+        }   
+
+
+        if (startFlag and enteredStart != NULL and enteredEnd != NULL) {
+
+            startedAlgorithm = true;
+
+            int FirstVertex = enteredStart - 1;
+            int LastVertex = enteredEnd - 1;
+
+            int Infinity = numeric_limits<int>::max(); // Т.к. расстояние до других вершин неизвестно, приравниваем к бесконечности.
+
+            // Наш заданный граф с помощью матрицы смежностей:
+            //graph.arrVertex[matrX][matrY];
+            //graph.arrVertex[matrY][matrX];
+
+            if (matrX == matrY) {
+                graph.arrVertex[matrX][matrY] = 0;
+                graph.arrVertex[matrY][matrX] = 0;
+            }
+
+            if (matrX != matrY and (graph.arrVertex[matrX][matrY] < 1) and (graph.arrVertex[matrY][matrX] < 1)) {
+                graph.arrVertex[matrX][matrY] = Infinity;
+                graph.arrVertex[matrY][matrX] = Infinity;
+            }
+
+            // Массив с весом между вершинами:
+            vector <int> lenght(CountVertex, Infinity);
+
+            // Очередь с приоритетом для вершин:
+            priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> QueueVertex;
+
+            // Начало алгоритма. Начинаем с первой вершины.
+            lenght[FirstVertex] = 0; // Начало (исходящий узел графа) равен 0 (т.к. это расстояние вершины до самой себя).
+            QueueVertex.push({ 0, FirstVertex }); // Вставляем в приоритетную очередь начальную вершину.
+
+
+            // Массив для отслежования посещённых вершин
+            vector<bool> visited(CountVertex, false);
+            visited[FirstVertex] = true; // Помечаем начальную вершину как посещённую.
+
+            // Массив для хранения предыдущей вершины.
+            vector<int> previous(CountVertex, -1);
+
+            // Шаги повторяем до тех пор, пока на графе есть непосещенные точки.
+            while (!QueueVertex.empty()) {
+                int distance = -QueueVertex.top().first;
+                int vertex = QueueVertex.top().second; // Следующая вершина.
+                QueueVertex.pop();
+
+                // Если рассматриваемая длина больше той, что уже хранится, то идём дальше.
+                if (distance > lenght[vertex]) {
+                    continue;
+                }
+
+                // Перебираем все вершины.
+                for (int v = 0; v < CountVertex; v++) {
+                    int dist = graph.arrVertex[vertex][v];
+                    if (dist != Infinity) {
+                        if (lenght[v] > lenght[vertex] + dist) {
+                            lenght[v] = lenght[vertex] + dist;
+                            QueueVertex.push({ -lenght[v], v });
+                            visited[v] = true; // Помечаем вершину как посещённую.
+                            previous[v] = vertex; // Запоминаем предыдущую вершину.
+                        }
+
+                    }
+                }
+            }
+
+            // В случае несвязанных вершин, вес пути до вершины приравниваем к бесконечности.
+            if (lenght[LastVertex] == Infinity) {
+
+                outputTextInfinity = true;
+                /* В случае несвязанных вершин выводится строчка "INFINITY",
+                чтобы это отследить надо ввести флажок. */
+
+            }
+            else {  // Вывод кратчайшего пути:
+                pathVertex = true;
+                // Вывод кратчайшего пути:
+                if (previous[LastVertex] != -1 || FirstVertex == LastVertex) {
+                    // Если вершина посещена и мы дошли до конца, то:
+                    vector<int> path; // Вектор, для хранения вершин кратчайшего пути.
+                    for (int vertex = LastVertex; vertex != -1; vertex = previous[vertex]) {
+                        path.push_back(vertex);
+                    }
+                    // Переворачиваем, так как рассматривался путь от конечной до исходной вершины.
+                    reverse(path.begin(), path.end());
+
+                    // Выводим кратчайший путь:
+                    string str = "\nКратчайший путь: [";
+                    for (int i = 0; i < path.size(); i++) {
+                        str += std::to_string(path[i] + 1);
+                        if (i != path.size() - 1) {
+                            str += "] -> [";
+                        }
+                    }
+                    str += "]: " + std::to_string(lenght[LastVertex]);
+                    Text text(str, font, 20);
+                    text.setPosition(10, 10 + (CountVertex * 30)); // Позиция текста смещается на 30 пикселей вниз от предыдущего текста
+                    window.draw(text);
+                }
+            }
+
+
+        }
             // Отрисовка прямоугольников.
             window.draw(leftRect);
             window.draw(rightRect);
@@ -677,14 +664,24 @@ int main() {
 
             }
 
-            if (selectedStartAlgorithm) {
+            if (startFlag) {
 
                 window.draw(startVertex);
-                window.draw(startNum);
-                if (selectedEndAlgorithm) {
+                window.draw(start);
+
+                if (startEndFlag) {
+
                     window.draw(endVertex);
+                    window.draw(end);
+
                 }
 
+            }
+
+            if (outputTextInfinity) {
+
+                window.draw(textINF);
+               
             }
 
             for (Edge* edge : graph.edges) {
@@ -771,8 +768,7 @@ int main() {
             }
 
             window.display();
-
-        }
-
-        return 0;
     }
+ return 0;
+}
+    
